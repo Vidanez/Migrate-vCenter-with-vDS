@@ -1,0 +1,17 @@
+Known Issues:
+
+1.     Duplicate folder names that exist under the same vCenter - ie, the same folder name existing say in different datacenters under the same VC.
+
+Misc:
+
+- This part renames the old cluster.  I have it currently commented out.  Customize and uncomment to use:
+ 
+Set-Cluster -Cluster $Cluster -Name $Cluster" - Migrated to https://newvcenter.company.com/" -Confirm:$false
+ 
+- This part emails out reporting on migration activities.  I have it currently commented out.  Customize and uncomment to use:
+ 
+$CSVhosts = Import-Csv .\$SourcevCenter\$Cluster\VMHost.csv | out-string
+Send-MailMessage -To "SOMEONE <SOMEONE@SOMEWHERE.com>", "SOMEONE2 <SOMEONE2@SOMEWHERE.com>" `
+-From "ME <ME@SOMEWHERE.com>" -subject "Notice - ESXi Servers Migrated" `
+-smtp smtp.server.com -body "$CSVhosts Source vCenter $SourcevCenter
+Destination vCenter $DestinationvCenter" | out-null
