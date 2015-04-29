@@ -51,8 +51,7 @@ Param(
 . .\Functions\import_folder_function.ps1
 . .\Functions\import_folder_function_testing.ps1
 . .\Functions\import_permissions_function.ps1
-. .\Functions\move-vm-to-dvswitch.ps1
-. .\Functions\move-vm-to-vswitch.ps1
+. .\Functions\move-vm-to.ps1
 
 Function Out-Log {
     Param(
