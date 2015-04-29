@@ -66,7 +66,7 @@ $scriptDir = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
 $exportpath = $scriptDir + "\Migrate_VC.csv"
 $headers = "" | Select-Object SourceVC, destinationVC, Sourcecluster, SourceDC, DestinationDC, VDS
 
-#If requested, create DeployVM.csv and exit
+#If requested, create Migrate_VC.csv and exit
 If ($createcsv) {
     If (Test-Path $exportpath) {
         Out-Log "`n$exportpath Already Exists!`n" "Red"
@@ -83,7 +83,8 @@ If ($createcsv) {
 $ErrorActionPreference = "Inquire"
 
 #Gather information from user
-$VCCred = Get-Credential
+$VCCred = Get-Credential -message  "Enter SOURCE vcenter credentials"
+$VCgreen = Get-Credential -message  "Enter DESTINATION vcenter credentials"
 
 $credential = Get-Credential -message  "Enter the password for Root on the ESXi servers" -UserName Root
 $esxpass = $credential.GetNetworkCredential().password
@@ -165,7 +166,7 @@ Write-Host $Cluster -ForegroundColor Green -NoNewline
 Write-Host " DOES exist in " -NoNewline
 Write-Host $SourcevCenter -ForegroundColor Green
 }
-else `
+else
 {
 Write-Host "Cluster " -NoNewline
 Write-Host $Cluster -ForegroundColor Green -NoNewline
@@ -193,7 +194,7 @@ disconnect-viserver * -confirm:$false
 $ErrorActionPreference = "Inquire"
 
 #Check that destination datacenter exists
-Connect-VIserver -Server $DestinationvCenter -credential $VCCred | Out-Null
+Connect-VIserver -Server $DestinationvCenter -credential $VCCgreen | Out-Null
 $DataCenterCheck = Get-Datacenter -Name $DestinationDatacenter
 If ($DataCenterCheck = $DestinationDatacenter) {
 Write-Host "Datacenter " -NoNewline
@@ -238,7 +239,7 @@ If ($intAnswer -eq 6) {
 	disconnect-viserver * -confirm:$false
 	Write-Host "Importing folders to destination datacenter " -NoNewline
 	Write-Host $DestinationDatacenter -ForegroundColor Green
-	Connect-VIserver -Server $DestinationvCenter -credential $VCCred | Out-Null
+	Connect-VIserver -Server $DestinationvCenter -credential $VCgreen| Out-Null
 	Import-Folders -FolderType "Blue" -DC $DestinationDatacenter -Server $DestinationvCenter -Filename ".\$SourcevCenter\$Cluster\folderexport.csv"
 	disconnect-viserver * -confirm:$false
                      } else {
@@ -434,7 +435,7 @@ Write-Host "
 .....Connecting to destination vCenter - " -NoNewline
 Write-Host $DestinationvCenter -ForegroundColor Green
 
-Connect-VIServer $DestinationvCenter -Credential $VCCred | Out-Null
+Connect-VIServer $DestinationvCenter -Credential $VCgreen| Out-Null
 
 Write-Host "
 .....Creating cluster " -NoNewline
@@ -700,7 +701,7 @@ Write-Host " on " -NoNewline
 Write-Host $DestinationvCenter -ForegroundColor Green
 
 #Connecting to the destination vCenter
-Connect-VIServer $DestinationvCenter -Credential $VCCred | Out-Null
+Connect-VIServer $DestinationvCenter -Credential $VCgreen| Out-Null
 
 #Adding the hosts.  Picking up root password from variable set in the beginning of script
 foreach ($vmhost in $CSVhosts) {Add-VMHost $vmhost.name -Location $Cluster -User root -Password $esxpass -confirm:$false -Force -RunAsync}
