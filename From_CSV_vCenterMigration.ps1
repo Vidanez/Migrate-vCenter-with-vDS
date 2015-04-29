@@ -33,6 +33,13 @@ include new funtions from Glenn Sizemore, Luc Dekens & Alan Renouf
 V2.0 Author JJ Vidanez Date $SaveDate()
 
 #>
+#requires -Version 3
+
+#Parameters
+Param(
+    [Parameter(Mandatory=$false)]
+    [switch]$createcsv
+    )
 
 #Denote function that allows Export-Folders usage.
 . .\Functions\create-dvswitch-dvportgroup.ps1
@@ -47,12 +54,15 @@ V2.0 Author JJ Vidanez Date $SaveDate()
 . .\Functions\move-vm-to-dvswitch.ps1
 . .\Functions\move-vm-to-vswitch.ps1
 
-
-#Parameters
-param (
-    [parameter(Mandatory=$false)]
-    [switch]$createcsv
+Function Out-Log {
+    Param(
+        [Parameter(Mandatory=$true)][string]$LineValue,
+        [Parameter(Mandatory=$false)][string]$fcolor = "White"
     )
+
+    Add-Content -Path $logfile -Value $LineValue
+    Write-Host $LineValue -ForegroundColor $fcolor
+}
 
 #Check and if not add powershell snapin
 if (-not (Get-PSSnapin VMware.VimAutomation.Core -ErrorAction SilentlyContinue)) {
