@@ -46,22 +46,12 @@ Param(
 . .\Functions\export_folder_function.ps1
 . .\Functions\export_permissions_function.ps1
 . .\Functions\get-distributedswitch.ps1
-. .\Functions\get_filename_function.ps1
+. .\Functions\interaction_functions.ps1
 . .\Functions\get_folder_path_function.ps1
 . .\Functions\import_folder_function.ps1
 . .\Functions\import_folder_function_testing.ps1
 . .\Functions\import_permissions_function.ps1
 . .\Functions\move-vm-to.ps1
-
-Function Out-Log {
-    Param(
-        [Parameter(Mandatory=$true)][string]$LineValue,
-        [Parameter(Mandatory=$false)][string]$fcolor = "White"
-    )
-
-    Add-Content -Path $logfile -Value $LineValue
-    Write-Host $LineValue -ForegroundColor $fcolor
-}
 
 #Check and if not add powershell snapin
 if (-not (Get-PSSnapin VMware.VimAutomation.Core -ErrorAction SilentlyContinue)) {
@@ -158,10 +148,14 @@ Write-Host $DestinationDatacenter  -ForegroundColor Green
 
 #Check integrity of information with user
 Write-Host " "
-Write-Host -NoNewline "Please confirm that the above information is correct and press any key to continue . . . "
-$host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") | Out-Null
+Write-Host -NoNewline "Please confirm that the above information is correct"
+#$host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") | Out-Null
 Write-Host " "
-
+$continue = Read-Host "`nContinue (y/n)?"
+    If ($continue -notmatch "y") {
+        Out-Log "Exiting..." "Red"
+        Exit
+    }
 #Start of actual QA test for information provided
 Write-Host " "
 Write-Host "Running QA tests against the information provided"
@@ -203,7 +197,7 @@ disconnect-viserver * -confirm:$false
 $ErrorActionPreference = "Inquire"
 
 #Check that destination datacenter exists
-Connect-VIserver -Server $DestinationvCenter -credential $VCCgreen | Out-Null
+Connect-VIserver -Server $DestinationvCenter -credential $VCgreen | Out-Null
 $DataCenterCheck = Get-Datacenter -Name $DestinationDatacenter
 If ($DataCenterCheck = $DestinationDatacenter) {
 Write-Host "Datacenter " -NoNewline
@@ -368,8 +362,6 @@ If ($VDSpresent -match "TRUE") {
     #Get dvswitch instead to ask for it REPLACE!!!!!
     $OlddvSwitch = Read-Host "What is the name of the distributed vSwitch (dvSwitch) you want to move: "
 
-    #Ask what vCenter, datacenter and dvSwitch we're talking about
-    Disconnect-VIServer "*" -Force:$true
     #Make the connection to vCenter
     Connect-VIServer -Server $SourcevCenter -Credential $VCCred | Out-Null
     #Get the hosts from the datacenter to move
@@ -416,7 +408,7 @@ If ($VDSpresent -match "TRUE") {
         $report | Export-Csv ".\$SourcevCenter\$Cluster\switch-list$MovingHost.name.csv" -NoTypeInformation
 
         Write-Host "The dvSwitch and dvPortGroups have been exported to CSV file and a standard vSwitch with portgroups has been created."
-        Write-Host "Next Step is to run script 'Step02-Move-VM-to-vSwitch' which will move all VMs to standard vSwitches and portgroups"
+        Write-Host "Next Step is to move all VMs to standard vSwitches and portgroups"
         # Now impport the csv file with the switch info
         $report = Import-Csv ".\$SourcevCenter\$Cluster\switch-list$MovingHost.name.csv"
 
