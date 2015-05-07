@@ -1,1 +1,2 @@
-SourceVC,destinationVC,Sourcecluster,SourceDC,DestinationDC,VDSsourceVCname,destinationVCname,clustername,sourceDatacentername,destinationdatacentername,true|false
+SourceVC,destinationVC,Sourcecluster,SourceDC,DestinationDC
+sourceVCname,destinationVCname,clustername,sourceDatacentername,destinationdatacentername
