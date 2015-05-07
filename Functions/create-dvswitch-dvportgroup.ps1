@@ -23,22 +23,6 @@ function New-dvSwitch{
 	$task.Info.Result
 }
 
-function Get-dvSwitch{
-	param([parameter(Position = 0, Mandatory = $true)][string]$DatacenterName,
-	[parameter(Position = 1, Mandatory = $true)][string]$dvSwitchName)
-
-	$dcNetFolder = Get-View (Get-Datacenter $DatacenterName | Get-View).NetworkFolder
-	$found = $null
-	foreach($net in $dcNetFolder.ChildEntity){
-		if($net.Type -eq "VmwareDistributedVirtualSwitch"){
-			$temp = Get-View $net
-			if($temp.Name -eq $dvSwitchName){
-				$found = $temp
-			}
-		}
-	}
-	$found
-}
 function New-dvSwPortgroup{
 
 	# This function was written by Luc Dekens
@@ -48,7 +32,7 @@ function New-dvSwPortgroup{
 
 	param([parameter(Position = 0, Mandatory = $true, ValueFromPipeline = $true)][VMware.Vim.VmwareDistributedVirtualSwitch]$dvSw,
 	[parameter(Position = 1, Mandatory = $true)][string]$PgName,
-	[int]$PgNumberPorts = 64,
+	[int]$PgNumberPorts = 256,
 	[string]$PgBinding = "earlyBinding",
 	[string]$PgVLANType = "none",
 	[int[]]$PgVLANId,

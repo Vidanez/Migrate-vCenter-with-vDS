@@ -1,6 +1,4 @@
-﻿
- 
-function Get-FolderPath{
+﻿ function Get-FolderPath{
 <#
 .SYNOPSIS
   Returns the folderpath for a folder
