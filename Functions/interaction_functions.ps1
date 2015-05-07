@@ -23,3 +23,13 @@ Function Read-OpenFileDialog([string]$WindowTitle, [string]$InitialDirectory, [s
     $openFileDialog.ShowDialog() > $null
     if ($AllowMultiSelect) { return $openFileDialog.Filenames } else { return $openFileDialog.Filename }
 }
+
+Function Out-Log {
+    Param(
+        [Parameter(Mandatory=$true)][string]$LineValue,
+        [Parameter(Mandatory=$false)][string]$fcolor = "White"
+    )
+
+    Add-Content -Path $logfile -Value $LineValue
+    Write-Host $LineValue -ForegroundColor $fcolor
+}

@@ -1,4 +1,4 @@
-﻿# Migrating distributed vSwitch configurations from one vCenter to a new vCenter
+# Migrating distributed vSwitch configurations from one vCenter to a new vCenter
 # Written by: Gabrie van Zanten
 # http://www.GabesVirtualWorld.com
 
@@ -47,7 +47,8 @@ Function Get-dvSwitchNetworkAdapter
                             }
                             Default
                             {
-                              Get-view -ID $VirtualMachine.Network -Property 'Name','Key' |
+                            Write-Host $VirtualMachine.Network
+                              Get-view -ID $VirtualMachine.Network |
                                 Where-Object {$_.Key -eq $VirtualVmxnet.Backing.Port.PortgroupKey} |
                                 Select-Object -ExpandProperty 'Name'
                             }
@@ -148,8 +149,8 @@ Function Set-dvSwitchNetworkAdapter
             $Msg = ""
             if ($NetworkName)
             {
-                $Network = Get-View -Id $HostSystem.Network -Property 'Name','Config' |
-                    Where-Object { $_.Name -eq $NetworkName }
+                $Network = Get-View -Id $HostSystem.Network | Where-Object { $_.Name -eq $NetworkName }
+                Write-Host $Network
                 if ($Network)
                 {
                     $Msg += "Connecting $($netAdapter.Name) to $($NetworkName) "
@@ -202,7 +203,7 @@ Function Set-dvSwitchNetworkAdapter
             {
                 $Task = Get-VIObjectByVIView -MORef $VirtualMachine.ReconfigVM_Task($VirtualMachineConfigSpec)
 
-                if (-Not $RunAsync)
+                if ($RunAsync)
                 {
                     Wait-Task -Task $Task | Out-Null
                     $returnNetworkAdapter = $netAdapter
@@ -219,3 +220,5 @@ Function Set-dvSwitchNetworkAdapter
         }
     }
 }
+#New-Alias -Name Get-NetworkAdapter -Value Get-dvSwitchNetworkAdapter
+#New-Alias -Name Set-NetworkAdapter -Value Set-dvSwitchNetworkAdapter
