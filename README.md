@@ -17,12 +17,11 @@ Features:
 
 		SourceVC,destinationVC,Sourcecluster,SourceDC,DestinationDC
 
-		glo-co-vcenter.ph.esl-asia.com,glo-co-vcent.ph.esl-asia.com,GDH-CO-CLUSTER,Gibraltar-MOUNTPLEASANT,Gibraltar-MOUNTPLEASANT
-
-		glo-co-vcenter.ph.esl-asia.com,glo-co-vcent.ph.esl-asia.com,GDH-CLUSTER,Gibraltar-MOUNTPLEASANT,Gibraltar-MOUNTPLEASANT
+pepevcenter1,antoniovcenter2,pepecluster,datacenter1,datacenter2
 
 	
 During the process it does questions in order to allow manual intervention about:
+
 
 	If in the first cluster you already migrate the folders order in the datacenter you don’t need to do it again
 
