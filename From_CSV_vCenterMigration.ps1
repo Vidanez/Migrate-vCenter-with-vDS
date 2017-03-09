@@ -52,10 +52,10 @@ Param(
 . .\Functions\import_permissions_function.ps1
 . .\Functions\move-vm-to.ps1
 
-#Check and if not add powershell snapin
-if (-not (Get-PSSnapin VMware.VimAutomation.Core -ErrorAction SilentlyContinue)) {
-	Add-PSSnapin VMware.VimAutomation.Core}
-
+# Add VMware modules if required
+if ( !(Get-Module -Name VMware.VimAutomation.Core -ErrorAction SilentlyContinue) ) {
+. “C:\Program Files (x86)\VMware\Infrastructure\vSphere PowerCLI\Scripts\Initialize-PowerCLIEnvironment.ps1”
+}
 #Change powercliconfiguration so SSL cert errors will be ignored
 Set-PowerCLIConfiguration -InvalidCertificateAction Ignore -Confirm:$false
 
@@ -84,7 +84,7 @@ $ErrorActionPreference = "Inquire"
 $VCCred = Get-Credential -message  "Enter SOURCE vcenter credentials"
 $VCgreen = Get-Credential -message  "Enter DESTINATION vcenter credentials"
 
-$credential = Get-Credential -message  "Enter the password for Root on the ESXi servers" -UserName Root
+$credential = Get-Credential -message  "Enter the password for Root on the ESXi servers" -UserName root
 $esxpass = $credential.GetNetworkCredential().password
 
 #Prompt user for csv containing migration data
@@ -218,14 +218,14 @@ Foreach ($MIGRATION in $MIGRATIONDATA) {
     Write-Host -NoNewline "Normally, this step is needed during the first migration for each datacenter but, you may want to run it if folders were created since the last migration run.  Process will take more time depending on number of folders.
 
         Click Yes to export/import the folders or No to not export/import the folders.
-        
+
         Export and Import Folders?"
     Write-Host " "
     $continue = Read-Host "(y/n)?"
     If ($continue -match "y") {
         Write-Host "You decided to export/import folders." -ForegroundColor Red -BackgroundColor White
-    } 
-    else 
+    }
+    else
     {
         Write-Host "You decided not to export/import folders." -ForegroundColor Red -BackgroundColor White
     }
@@ -360,7 +360,7 @@ Foreach ($MIGRATION in $MIGRATIONDATA) {
     Write-Host "Do you want to migrate a dvSwitch with cluster "$Cluster
     $VDSmigrate = Read-Host "`n(y/n)?"
     If ($VDSmigrate -match "y") {
-        #Get dvswitch 
+        #Get dvswitch
         $OlddvSwitch = Read-Host "What is the name of the distributed vSwitch (dvSwitch) you want to move: "
         #Check that the source dvswitch exists
         #Make the connection to vCenter
@@ -369,7 +369,7 @@ Foreach ($MIGRATION in $MIGRATIONDATA) {
         $ListHost = get-cluster -name $Cluster | get-vmhost
         #Read the dvSwitch and dvPortGroups
         $dvSwitch = Get-dvSwitch $SourceDatacenter $OlddvSwitch
-        $dvPG = Get-dvSwPg $dvSwitch 
+        $dvPG = Get-dvSwPg $dvSwitch
         Write-Host "dvSwitch " -NoNewline
         Write-Host $dvSwitch -ForegroundColor Green -NoNewline
         Write-Host " DOES exist in " -NoNewline
@@ -380,7 +380,7 @@ Foreach ($MIGRATION in $MIGRATIONDATA) {
             $report=@()
             #Now create a (temporary) standard vSwitch with 256 ports. Remember, each VM needs one port and 256 might not be enough for you.
             #The name of this temporary standard vSwitch will be 'vSwitch-Migrate'
-            New-VirtualSwitch -Name 'vSwitch-Migrate' -NumPorts 256 -VMHost $MovingHost.name
+            New-VirtualSwitch -Name 'vSwitch-Migrate' -VMHost $MovingHost.name
             $vSwitch = Get-VirtualSwitch -VMHost $MovingHost.name -Name 'vSwitch-Migrate'
             foreach( $dvPGroup in $dvPG ){
                 $VLANID = $dvPGroup.Config.DefaultPortConfig.Vlan.VlanId
@@ -419,7 +419,7 @@ Foreach ($MIGRATION in $MIGRATIONDATA) {
                 foreach ($MovingHost in $ListHost ) {
                     $report=@()
                     $report = Import-Csv ".\$SourcevCenter\$Cluster\switch-list-$MovingHost.name.csv"
-            
+
                     Foreach( $row in $report){
         	            #     Set all VMs where dvPortGroup is equal to olddvPG to new standard (temporary) tmpvPG
         	            Write-Host "Switching VMs from dvPortGroups to standard PortGroup: " $row.olddvPG $row.tmpvPG "on" $MovingHost.name
@@ -427,7 +427,7 @@ Foreach ($MIGRATION in $MIGRATIONDATA) {
         	            }
                     Write-Host "All VMs have now been moved from the dvSwitches to the standard vSwitches."
                     }
-             disconnect-viserver * -confirm:$false     
+             disconnect-viserver * -confirm:$false
     }
     #End the process to migrate VDS
 
@@ -545,7 +545,7 @@ Foreach ($MIGRATION in $MIGRATIONDATA) {
             {
             Write-Host "Creating dvSwitch: " $row.olddvSwitch
             # Creating the new dvSwitch. You may want to change the baseUplink and nrUplink values to your needs
-            New-dvSwitch -dcName $DestinationDatacenter -dvSwName $row.olddvSwitch -baseUplink 4 -nrUplink 4
+            New-VDswitch -Location $DestinationDatacenter -Name $row.olddvSwitch -NumUplinkPorts 4
             }
         #Report will be used to store the changes
         $report=@()
@@ -557,7 +557,7 @@ Foreach ($MIGRATION in $MIGRATIONDATA) {
             $dvSwitchFromCSV = $row.olddvSwitch
             $dvSw = Get-dvSwitch -DatacenterName $DestinationDatacenter -dvSwitchName $dvSwitchFromCSV
             Write-Host "Creating dvPortGroup " $row.olddvPG " with VLANID " $row.VLANID " on dvSwitch " $row.olddvSwitch
-            New-dvSwPortgroup -dvSw $dvSw -PgName $row.olddvPG -PgVLANType "vlan" -PgVLANId $row.VLANID
+            New-VDPortgroup -VDSwitch $dvSw -Name $row.olddvPG -VlanId $row.VLANID -RunAsync
             }
         Write-Host "The new dvSwitch and dvPortGroups have been created"
     }
@@ -798,14 +798,14 @@ Foreach ($MIGRATION in $MIGRATIONDATA) {
     Write-Host " "
     Write-Host "Importing" -ForegroundColor Green -NoNewline
     Write-Host " VM folder locations"
-    foreach ($vm in $VMFolderLocationImport) { 
-        If (($vm.Folder -Like "Discovered virtual machine") -or ($vm.Folder -Like "vm"))  { 
-        } 
+    foreach ($vm in $VMFolderLocationImport) {
+        If (($vm.Folder -Like "Discovered virtual machine") -or ($vm.Folder -Like "vm"))  {
+        }
         else {
         Move-VM -VM $vm.Name -Destination $vm.Folder -RunAsync
         }
     }
-    
+
     #End import of virtual machine folder locations
 
     #Begin import of virtual machine custom attributes
@@ -888,5 +888,4 @@ Foreach ($MIGRATION in $MIGRATIONDATA) {
     #Check that the user is ready to proceed to the migration of the next cluster
     Write-Host " "
     Write-Host -NoNewline "Proceed to the migration of the next cluster.  If there is not a next cluster the script will exit. . . . " -ForegroundColor Green
-    
 }
